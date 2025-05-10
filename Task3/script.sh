@@ -201,39 +201,4 @@ else
     echo "$failure_days"
 fi
 
-# 12. Analysis Suggestions
-echo -e "\n12. Analysis Suggestions"
-echo "----------------------"
-echo "Based on the analysis, here are some observations and recommendations:"
-
-# Failure Reduction
-if [ $(awk -v fp="$failure_percentage" 'BEGIN {print (fp > 5) ? 1 : 0}') -eq 1 ]; then
-    echo "- High Failure Rate: Failure rate ($failure_percentage%) is significant. Investigate common status codes (e.g., 404, 500) from the status code breakdown."
-    echo "  - For 404 errors, check for broken links or missing resources."
-    echo "  - For 500 errors, review server logs for application or database issues."
-else
-    echo "- Failure Rate: Failure rate ($failure_percentage%) is relatively low. Continue monitoring for spikes in 4xx/5xx errors."
-fi
-
-# Peak Failure Times
-peak_failure_hour=$(awk -F'[' '$9 ~ /^[45][0-9][0-9]$/ {print $2}' "$LOG_FILE" | awk -F: '{print $2}' | sort | uniq -c | sort -nr | head -1 | awk '{print $2}')
-if [ -n "$peak_failure_hour" ]; then
-    echo "- Peak Failure Hour: Hour $peak_failure_hour has the most failures. Investigate server load, scheduled tasks, or external factors during this time."
-fi
-
-# Request Trends
-if echo "$trend_analysis" | grep -q "Increasing"; then
-    echo "- Traffic Spikes: Observed increasing request trends during certain hours. Consider load balancing or scaling resources during peak times."
-fi
-
-# Security Concerns
-if [ $top_ip_count -gt $((total_requests/10)) ]; then
-    echo "- Potential Security Concern: IP $top_ip_address accounts for a large portion of requests ($top_ip_count). Monitor for potential bot activity or DDoS attempts."
-fi
-
-# General Improvements
-echo "- Monitoring: Implement real-time monitoring for 4xx/5xx errors to address issues promptly."
-echo "- Caching: If GET requests dominate (as seen with $get_requests GET vs $post_requests POST), consider implementing caching for frequently accessed resources."
-echo "- Log Analysis: Schedule regular log analysis to detect anomalies early."
-
 echo -e "\nAnalysis complete!"
